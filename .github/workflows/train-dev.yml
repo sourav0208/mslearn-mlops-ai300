@@ -83,6 +83,8 @@ jobs:
           az ml job create \
             -f src/job.yml \
             --name "$JOB_NAME" \
+            --resource-group "$RESOURCE_GROUP" \
+            --workspace-name "$WORKSPACE" \
             --set inputs.training_data.path=azureml:diabetes-dev-folder:1 \
             --stream | tee training_output.log
 
