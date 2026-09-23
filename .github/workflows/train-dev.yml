@@ -58,16 +58,19 @@ jobs:
             --query "{subscription:name,state:state}" \
             --output table
 
-      - name: Detect Azure ML workspace
+      - name: Verify workspace through Azure REST API
+        shell: bash
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          WORKSPACE: ${{ vars.AZURE_WORKSPACE_NAME }}
         run: |
-          az ml workspace show \
-            --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
-            --name "${{ vars.AZURE_WORKSPACE_NAME }}" \
-            --output table
+          SUBSCRIPTION=$(az account show --query id -o tsv)
 
-          az configure --defaults \
-            group="${{ vars.AZURE_RESOURCE_GROUP }}" \
-            workspace="${{ vars.AZURE_WORKSPACE_NAME }}"
+          az rest \
+            --method get \
+            --url "https://management.azure.com/subscriptions/${SUBSCRIPTION}/resourceGroups/${RESOURCE_GROUP}/providers/Microsoft.MachineLearningServices/workspaces/${WORKSPACE}?api-version=2024-04-01" \
+            --query "{name:name,location:location,state:properties.provisioningState}" \
+            --output json
         
 
       - name: Run training job in dev and capture logs
