@@ -32,7 +32,9 @@ jobs:
 
       - name: Install Azure ML CLI
         run: |
-          az extension add -n ml -y
+          az extension add --name ml --version 2.44.1 --yes
+          az version
+          az extension show --name ml --query version 
 
       - name: Verify Azure configuration
         env:
