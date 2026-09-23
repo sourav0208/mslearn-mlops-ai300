@@ -24,19 +24,35 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Test Azure ML with CLI 2.89.1
+        uses: azure/cli@v2
+        with:
+          azcliversion: 2.89.1
+          inlineScript: |
+            az extension add --name ml --version 2.44.1 --yes
+
+            az version
+
+            az ml workspace show \
+              --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --name "${{ vars.AZURE_WORKSPACE_NAME }}"
+
       - name: Verify Azure connection
+        if: ${{ false }}
         run: |
           az account show \
             --query "{subscription:name,state:state,tenant:tenantId}" \
             --output table
 
       - name: Install Azure ML CLI
+        if: ${{ false }}
         run: |
           az extension add --name ml --version 2.44.1 --yes
           az version
           az extension show --name ml --query version 
 
       - name: Verify Azure configuration
+        if: ${{ false }}
         env:
           RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
           WORKSPACE: ${{ vars.AZURE_WORKSPACE_NAME }}
