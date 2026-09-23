@@ -73,20 +73,25 @@ jobs:
             --output json
         
 
-      - name: Run training job in dev and capture logs
-        id: train
+      - name: Diagnose Azure ML CLI
         shell: bash
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          WORKSPACE: ${{ vars.AZURE_WORKSPACE_NAME }}
         run: |
-          set -o pipefail
-          JOB_NAME="diabetes-train-dev-${{ github.run_id }}"
+          az version
 
-          az ml job create \
-            -f src/job.yml \
-            --name "$JOB_NAME" \
+          az ml workspace show \
             --resource-group "$RESOURCE_GROUP" \
-            --workspace-name "$WORKSPACE" \
-            --set inputs.training_data.path=azureml:diabetes-dev-folder:1 \
-            --stream | tee training_output.log
+            --name "$WORKSPACE" \
+            --debug \
+            > workspace-debug.log 2>&1 || {
+              grep -Ei 'request url|response status|invalid url|error' \
+                workspace-debug.log \
+                | sed -E 's/(Bearer|token|Authorization)[^[:space:]]*/[REDACTED]/g' \
+                | tail -n 20
+              exit 1
+            }
 
       - name: Extract dev metrics from logs
         id: parse-metrics
