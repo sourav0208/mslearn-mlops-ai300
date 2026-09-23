@@ -28,6 +28,28 @@ jobs:
         run: |
           az extension add -n ml -y
 
+      - name: Verify Azure configuration
+        env:
+          RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+          WORKSPACE: ${{ vars.AZURE_WORKSPACE_NAME }}
+        run: |
+          test -n "$RESOURCE_GROUP" || {
+            echo "ERROR: AZURE_RESOURCE_GROUP is empty"
+            exit 1
+          }
+
+          test -n "$WORKSPACE" || {
+            echo "ERROR: AZURE_WORKSPACE_NAME is empty"
+            exit 1
+          }
+
+          echo "Resource group: $RESOURCE_GROUP"
+          echo "Workspace: $WORKSPACE"
+
+          az account show \
+            --query "{subscription:name,state:state}" \
+            --output table
+
       - name: Detect Azure ML workspace
         run: |
           az ml workspace show \
