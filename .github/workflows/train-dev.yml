@@ -28,25 +28,16 @@ jobs:
         run: |
           az extension add -n ml -y
 
-      - name: Detect Azure ML workspace
-        id: detect
+      - name: Configure Azure ML workspace
         run: |
-          RG_NAME=$(az group list --query "[?starts_with(name,'rg-ai300-l')].name | [0]" -o tsv)
-          if [ -z "$RG_NAME" ]; then
-            echo "No resource group starting with rg-ai300-l found." >&2
-            exit 1
-          fi
+          az ml workspace show \
+            --resource-group "${{vars.AZRURE_RESOURCE_GROUP}}" \
+            --name "${vars.AZURE_WORKSPACE_NAME}}"
+            --output table
 
-          WS_NAME=$(az ml workspace list --resource-group "$RG_NAME" --query "[?starts_with(name,'mlw-ai300-l')].name | [0]" -o tsv)
-          if [ -z "$WS_NAME" ]; then
-            echo "No workspace starting with mlw-ai300-l found in $RG_NAME." >&2
-            exit 1
-          fi
-
-          az configure --defaults group="$RG_NAME" workspace="$WS_NAME"
-
-          echo "resource_group=$RG_NAME" >> "$GITHUB_OUTPUT"
-          echo "workspace=$WS_NAME" >> "$GITHUB_OUTPUT"
+          az configure --defaults \
+            group="${{ vars.AZURE_RESOURCE_GROUP }}" \
+            workspace="${{ vars.AZURE_WORKSPACE_NAME }}"
 
       - name: Run training job in dev and capture logs
         id: train
